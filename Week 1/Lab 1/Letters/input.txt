@@ -1,0 +1,31 @@
+Wide-spread deployment of sensor networks is on the
+horizon. Networks of thousands of sensors may present
+an economical solution to some of our challenging problems :
+real-time traffic monitoring , building safety monitoring
+( structural , fire , and physical security monitoring ), military
+sensing and tracking , distributed measurement of seismic
+activity , real-time pollution monitoring , wildlife monitoring ,
+wildfire tracking, etc. Many applications are dependent
+on the secure operation of a sensor network , and have
+serious consequences if the network is compromised or disrupted.
+
+In sensor network security , an important challenge is
+the design of protocols to bootstrap the establishment of
+a secure communications infrastructure from a collection
+of sensor nodes which may have been pre-initialized with
+some secret information but have had no prior direct contact
+with each other . We refer to this problem as the bootstrapping
+problem . A bootstrapping protocol must not only
+enable a newly deployed sensor network to initiate a secure
+infrastructure , but it must also allow nodes deployed at a
+later time to join the network securely. The difficulty of
+the bootstrapping problem stems from the numerous limitations
+of sensor networks . We discuss these limitations in
+detail in Section 2.2; some of the more important ones include
+the inability to utilize existing public key cryptosystems
+( since the expensive computations involved could expose
+the power-constrained nodes to a denial-of-service attack ),
+the inability to pre-determine which nodes will be
+neighbors after deployment, and the inability of any node
+to put absolute trust in its neighbor ( since the nodes are not
+tamper resistant and are vulnerable to physical capture ).
