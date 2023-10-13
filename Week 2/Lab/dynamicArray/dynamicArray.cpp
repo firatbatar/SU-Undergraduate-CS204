@@ -41,6 +41,8 @@ int main() {
 	for (int i = 0; i < countOfLines; i++) {
 		//TODO: use length() for each line to find the total number of characters
 		totalNumOfCharacters += myList[i].length();
+		// Or
+		//totalNumOfCharacters += (*(myList + i)).length()
 	}
 
 	double averageOfNumCharacters = totalNumOfCharacters / countOfLines;
