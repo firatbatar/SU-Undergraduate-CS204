@@ -1,3 +1,7 @@
+// TODO: Correct the ID calculation
+// ID is global
+// Keep a static variable in add_flight func
+
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -264,6 +268,42 @@ void delete_linked_list(airline *&head) {
     }
 }
 
+void remove_flight_with_input(airline *&head) {
+    // Get the id
+    int id;
+    cout << "Flight id to remove: ";
+    cin >> id;
+
+    // Search the flight
+    airline *currAirline = head;
+    while (currAirline) {  // Go over airlines
+        flight *currFlight = currAirline->flights;
+
+        while (currFlight) {             // Go over flights of that airline
+            if (currFlight->ID == id) {  // Found the flight
+                cout << "Romeving flight id: " << id << endl;
+
+                flight *prev = currFlight->prev;
+                flight *next = currFlight->next;
+                delete currFlight;
+
+                if (prev) {
+                    prev->next = next;
+                }
+
+                if (next) {
+                    next->prev = prev;
+                }
+
+                return;
+            }
+            currFlight = currFlight->next;
+        }
+    }
+
+    cout << "There is no flight with id " << id;
+}
+
 void print_all(airline *head) {
     while (head) {
         cout << "###################################" << endl;
@@ -290,7 +330,6 @@ void print_all(airline *head) {
     }
 }
 
-//
 void printMainMenu() {
     cout << endl;
     cout << "I***********************************************I" << endl
