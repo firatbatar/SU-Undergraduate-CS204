@@ -28,6 +28,9 @@ struct flight {
     flight(const string &f, const string &t, int h, int m, int p)
         : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
 
+    flight(const string &f, const string &t, int h, int m, int p, int id)
+        : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(id) {}
+
     flight(flight *f, int id)
         : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(id) {}
 };
@@ -103,53 +106,114 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
     return make_pair(airlines, flights);
 }
 
+void add_flight_to_list(flight *&currF, flight *&fToAdd) {
+    if (!currF) {        // If flights list is empty
+        currF = fToAdd;  // Make the current flight head
+    }
+    else {
+        int fToAddTime = 60 * fToAdd->hour + fToAdd->min;  // Time of the flight to add the list
+        int currTime = 60 * currF->hour + currF->min;      // Time of the current flight pointer from the list
+        while (currF->next && fToAddTime >= currTime) {    // While the flight to add is later than the current
+                                                           // flight, move current flight forward
+            currF = currF->next;
+            currTime = 60 * currF->hour + currF->min;
+        }
+
+        while (currF->prev && fToAddTime <= currTime) {  // While the flight to add is earlier than the current
+                                                         // flight, move current flight backward
+            currF = currF->prev;
+            currTime = 60 * currF->hour + currF->min;
+        }
+
+        if (fToAddTime > currTime) {  // If flight to add must come later
+            // Add new flight in between of currF and its next (temp)
+            flight *temp = currF->next;
+            currF->next = fToAdd;
+            fToAdd->prev = currF;
+
+            if (temp) {
+                fToAdd->next = temp;
+                temp->prev = fToAdd;
+            }
+        }
+        else {  // If flight to add must come earlier
+            // Add new flight in between of currF and its previous (temp)
+            flight *temp = currF->prev;
+            currF->prev = fToAdd;
+            fToAdd->next = currF;
+
+            if (temp) {
+                fToAdd->prev = temp;
+                temp->next = fToAdd;
+            }
+        }
+    }
+
+    // Make sure currF points to head of the flight list
+    while (currF->prev) {
+        currF = currF->prev;
+    }
+}
+
+void add_flight_with_input(airline *&head) {
+    // Take the inputs
+    string a, f, t;
+    int h, m, p;
+    cout << "Adding manuel entry:" << endl;
+
+    cout << "Airline: ";
+    cin >> a;
+    cout << "FROM: ";
+    cin >> f;
+    cout << "TO: ";
+    cin >> t;
+    cout << "HOUR: ";
+    cin >> h;
+    cout << "MIN: ";
+    cin >> m;
+    cout << "PRICE: ";
+    cin >> p;
+
+    // Find the airline
+    airline *currAirline = head;
+    while (currAirline && currAirline->name != a) {
+        currAirline = currAirline->next;
+    }
+
+    if (!currAirline) {  // Airline does not exits
+        // Create a new airline
+        int newAirlineID = 1;        // Start from one since while loop won't count the last element
+        currAirline = head;          // Go back to head airline
+        while (currAirline->next) {  // Count the airlines for a new ID
+            currAirline = currAirline->next;
+            newAirlineID++;
+        }
+
+        airline *newAirline = new airline(a, newAirlineID, nullptr, nullptr);
+        currAirline->next = newAirline;   // currAirline is already at last element
+        currAirline = currAirline->next;  // Move currAirline to the new airline
+    }
+
+    // Create the flight
+    int newFlightID = 0;
+    flight *tempFlight = currAirline->flights;
+    while (tempFlight) {  // Count the flights for a new ID
+        tempFlight = tempFlight->next;
+        newFlightID++;
+    }
+    flight *new_flight = new flight(f, t, h, m, p, newFlightID);
+
+    // Add the flight to the list
+    add_flight_to_list(currAirline->flights, new_flight);
+}
+
 // Create a linked list of flights that are ordered by time from a given flights vector
 flight *create_flight_list(vector<flight> &flights) {
     flight *currF = nullptr;  // Pointer to current flight from the list
     for (int i = 0; i < flights.size(); i++) {
         flight *fToAdd = new flight(&flights[i], i);  // Convert the flight from the vector into dynamic variable
 
-        if (!currF) {        // If flights list is empty
-            currF = fToAdd;  // Make the current flight head
-        }
-        else {
-            int fToAddTime = 60 * fToAdd->hour + fToAdd->min;  // Time of the flight to add the list
-            int currTime = 60 * currF->hour + currF->min;      // Time of the current flight pointer from the list
-            while (currF->next && fToAddTime >= currTime) {    // While the flight to add is later than the current
-                                                               // flight, move current flight forward
-                currF = currF->next;
-                currTime = 60 * currF->hour + currF->min;
-            }
-
-            while (currF->prev && fToAddTime <= currTime) {  // While the flight to add is earlier than the current
-                                                             // flight, move current flight backward
-                currF = currF->prev;
-                currTime = 60 * currF->hour + currF->min;
-            }
-
-            if (fToAddTime > currTime) {  // If flight to add must come later
-                // Add new flight in between of currF and its next (temp)
-                flight *temp = currF->next;
-                currF->next = fToAdd;
-                fToAdd->prev = currF;
-
-                if (temp) {
-                    fToAdd->next = temp;
-                    temp->prev = fToAdd;
-                }
-            }
-            else {  // If flight to add must come earlier
-                // Add new flight in between of currF and its previous (temp)
-                flight *temp = currF->prev;
-                currF->prev = fToAdd;
-                fToAdd->next = currF;
-
-                if (temp) {
-                    fToAdd->prev = temp;
-                    temp->next = fToAdd;
-                }
-            }
-        }
+        add_flight_to_list(currF, fToAdd);
     }
 
     // Go until the start of the list
@@ -275,8 +339,8 @@ void processMainMenu() {
                 print_all(head);
                 break;
             case '3':
-                cout << "Commented out functionalities are going to be implemented" << endl;
-                // add_flight_with_input(head);
+                // cout << "Commented out functionalities are going to be implemented" << endl;
+                add_flight_with_input(head);
                 break;
             case '4':
                 cout << "Commented out functionalities are going to be implemented" << endl;
