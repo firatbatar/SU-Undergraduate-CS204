@@ -288,11 +288,15 @@ void remove_flight_with_input(airline *&head) {
                 flight *next = currFlight->next;
                 delete currFlight;
 
-                if (prev) {
+                if (prev) {  // If previous exits, make previous' next 'next'
                     prev->next = next;
                 }
+                else {
+                    // If previous does not exits, then we deleted the head node of the flights of current airline
+                    currAirline->flights = next;  // Update it
+                }
 
-                if (next) {
+                if (next) {  // If next exits, make next's previous 'prev'
                     next->prev = prev;
                 }
 
@@ -300,6 +304,7 @@ void remove_flight_with_input(airline *&head) {
             }
             currFlight = currFlight->next;
         }
+        currAirline = currAirline->next;
     }
 
     cout << "There is no flight with id " << id;
@@ -383,8 +388,8 @@ void processMainMenu() {
                 add_flight_with_input(head);
                 break;
             case '4':
-                cout << "Commented out functionalities are going to be implemented" << endl;
-                // remove_flight_with_input(head);
+                // cout << "Commented out functionalities are going to be implemented" << endl;
+                remove_flight_with_input(head);
                 break;
             case '5':
                 cout << "Commented out functionalities are going to be implemented" << endl;
