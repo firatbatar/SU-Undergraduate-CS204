@@ -1,7 +1,3 @@
-// TODO: Correct the ID calculation
-// ID is global
-// Keep a static variable in add_flight func
-
 #include <algorithm>
 #include <cctype>
 #include <chrono>
@@ -32,11 +28,8 @@ struct flight {
     flight(const string &f, const string &t, int h, int m, int p)
         : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
 
-    flight(const string &f, const string &t, int h, int m, int p, int id)
-        : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(id) {}
-
-    flight(flight *f, int id)
-        : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(id) {}
+    flight(flight *f)
+        : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(0) {}
 };
 
 struct airline {
@@ -111,6 +104,9 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
 }
 
 void add_flight_to_list(flight *&currF, flight *&fToAdd) {
+    static int currentID = 0;  // Keep track of the current id for the flights
+    fToAdd->ID = currentID;    // Assign the current id
+
     if (!currF) {        // If flights list is empty
         currF = fToAdd;  // Make the current flight head
     }
@@ -157,6 +153,8 @@ void add_flight_to_list(flight *&currF, flight *&fToAdd) {
     while (currF->prev) {
         currF = currF->prev;
     }
+
+    currentID++;  // Increment the current id after each addition
 }
 
 void add_flight_with_input(airline *&head) {
@@ -199,13 +197,7 @@ void add_flight_with_input(airline *&head) {
     }
 
     // Create the flight
-    int newFlightID = 0;
-    flight *tempFlight = currAirline->flights;
-    while (tempFlight) {  // Count the flights for a new ID
-        tempFlight = tempFlight->next;
-        newFlightID++;
-    }
-    flight *new_flight = new flight(f, t, h, m, p, newFlightID);
+    flight *new_flight = new flight(f, t, h, m, p);
 
     // Add the flight to the list
     add_flight_to_list(currAirline->flights, new_flight);
@@ -215,7 +207,7 @@ void add_flight_with_input(airline *&head) {
 flight *create_flight_list(vector<flight> &flights) {
     flight *currF = nullptr;  // Pointer to current flight from the list
     for (int i = 0; i < flights.size(); i++) {
-        flight *fToAdd = new flight(&flights[i], i);  // Convert the flight from the vector into dynamic variable
+        flight *fToAdd = new flight(&flights[i]);  // Convert the flight from the vector into dynamic variable
 
         add_flight_to_list(currF, fToAdd);
     }
