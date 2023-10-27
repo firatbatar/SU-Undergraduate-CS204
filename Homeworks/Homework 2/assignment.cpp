@@ -26,10 +26,17 @@ struct flight {
     flight() {}
 
     flight(const string &f, const string &t, int h, int m, int p)
-        : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr) {}
+        : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
 
     flight(flight *f)
-        : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next) {}
+        : from(f->from),
+          to(f->to),
+          hour(f->hour),
+          min(f->min),
+          price(f->price),
+          next(f->next),
+          prev(f->next),
+          ID(f->ID) {}
 };
 
 struct airline {
@@ -42,7 +49,7 @@ struct airline {
     // Hint: You may need to implement multiple constructors
     airline() {}
 
-    airline(const string &n, airline *nt, flight *f) : name(n), next(nt), flights(f) {}
+    airline(const string &n, airline *nt, flight *f) : name(n), next(nt), flights(f), ID(0) {}
 };
 
 pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
@@ -200,6 +207,32 @@ void delete_linked_list(airline *&head) {
     }
 }
 
+void print_all(airline *head) {
+    while (head) {
+        cout << "###################################" << endl;
+        // Airline information
+        cout << "### AIRLINE ID: " << head->ID << " ###" << endl;
+        cout << "NAME: " << head->name << endl;
+
+        // Flights' informations
+        flight *fTemp = head->flights;
+        cout << "FLIGHTS: ";
+        while (fTemp) {
+            cout << "#[";
+            cout << fTemp->ID << "|";
+            cout << fTemp->from << "->" << fTemp->to << "|";
+            cout << fTemp->hour << ":" << fTemp->min << "|";
+            cout << fTemp->price << "TRY";
+            cout << "]#";
+
+            fTemp = fTemp->next;  // Move to next flight
+        }
+        cout << endl;
+
+        head = head->next;  // Move to next airline
+    }
+}
+
 //
 void printMainMenu() {
     cout << endl;
@@ -245,8 +278,8 @@ void processMainMenu() {
                 input_done = true;
                 break;
             case '2':
-                cout << "Commented out functionalities are going to be implemented" << endl;
-                // print_all(head);
+                // cout << "Commented out functionalities are going to be implemented" << endl;
+                print_all(head);
                 break;
             case '3':
                 cout << "Commented out functionalities are going to be implemented" << endl;
