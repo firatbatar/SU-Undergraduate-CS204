@@ -222,12 +222,21 @@ flight *create_flight_list(vector<flight> &flights) {
 
 airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flight>> &flights) {
     // TO DO: Implement
-    airline *head = nullptr;
-    for (int i = airlines.size() - 1; i >= 0; i--) {
+    airline *head = nullptr;     // Head of the list to return
+    airline *current = nullptr;  // Current airline to keep the list order
+    for (int i = 0; i < airlines.size(); i++) {
         // Get the flights first
         flight *fHead = create_flight_list(flights[i]);
 
-        head = new airline(airlines[i], i, head, fHead);  // Create a new head that points to previous head
+        airline *temp = new airline(airlines[i], i, nullptr, fHead);  // Create a new airline that points to nullptr
+        if (!head) {  // If the list is empty, the new airline is the head
+            head = temp;
+            current = temp;
+        }
+        else {
+            current->next = temp;
+            current = temp;
+        }
     }
 
     return head;
