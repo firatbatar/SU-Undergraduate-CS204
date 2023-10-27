@@ -28,15 +28,8 @@ struct flight {
     flight(const string &f, const string &t, int h, int m, int p)
         : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
 
-    flight(flight *f)
-        : from(f->from),
-          to(f->to),
-          hour(f->hour),
-          min(f->min),
-          price(f->price),
-          next(f->next),
-          prev(f->next),
-          ID(f->ID) {}
+    flight(flight *f, int id)
+        : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(id) {}
 };
 
 struct airline {
@@ -49,7 +42,7 @@ struct airline {
     // Hint: You may need to implement multiple constructors
     airline() {}
 
-    airline(const string &n, airline *nt, flight *f) : name(n), next(nt), flights(f), ID(0) {}
+    airline(const string &n, int id, airline *nt, flight *f) : name(n), ID(id), next(nt), flights(f) {}
 };
 
 pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
@@ -114,7 +107,7 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
 flight *create_flight_list(vector<flight> &flights) {
     flight *currF = nullptr;  // Pointer to current flight from the list
     for (int i = 0; i < flights.size(); i++) {
-        flight *fToAdd = new flight(&flights[i]);  // Convert the flight from the vector into dynamic variable
+        flight *fToAdd = new flight(&flights[i], i);  // Convert the flight from the vector into dynamic variable
 
         if (!currF) {        // If flights list is empty
             currF = fToAdd;  // Make the current flight head
@@ -174,7 +167,7 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
         // Get the flights first
         flight *fHead = create_flight_list(flights[i]);
 
-        head = new airline(airlines[i], head, fHead);  // Create a new head that points to previous head
+        head = new airline(airlines[i], i, head, fHead);  // Create a new head that points to previous head
     }
 
     return head;
