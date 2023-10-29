@@ -4,6 +4,7 @@
 #include <ctime>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -242,11 +243,55 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
     return head;
 }
 
-int pathfinder(airline *head) {
+pair<int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLoc, int tranferCount) {
     // TO DO: Implement
     // Hint: A recursive search seems like the best solution.
     // Hint: You don't have to use doubly linked list features
-    return 0;
+    airline *currAirline = head;
+    int bestPrice = INT_MAX;
+    static vector<int> bestPath;
+    while (currAirline) {  // Go over every airline to find matching flights
+        flight *currFlight = currAirline->flights;
+        while (currFlight) {      // Go over each flight
+            int price = INT_MAX;  // Also start from max to ignore flights that don't match at all
+            vector<int> path = {currFlight->ID};
+
+            if (currFlight->from != startLoc) {
+                // If flight origin does not match start location, skip that flight
+                currFlight = currFlight->next;
+                continue;
+            }
+
+            if (currFlight->to == stopLoc) {
+                // If flight target matches the target stop location, return that flight
+                price = currFlight->price;  // Add price of this flight
+            }
+            else {  // If flight target doesn't match
+                if (tranferCount > 1) {
+                    // If there are available transfers, make a new search from this flight
+                    pair<int, vector<int>> transferFlight = pathfinder(head, currFlight->to, stopLoc, tranferCount - 1);
+
+                    if (transferFlight.second.size() > 0) {  // If there is a valid transfer continuation
+                        // Price will be this flight's price + transfers' price
+                        price = currFlight->price + transferFlight.first;
+                        path.insert(path.end(), transferFlight.second.begin(), transferFlight.second.end());
+                    }
+                }
+            }
+
+            if (price < bestPrice) {  // If the new price is better
+                bestPrice = price;    // make this price the new bestPrice
+                bestPath = path;      // Make this path the new bestPath
+            }
+
+            currFlight = currFlight->next;
+        }
+
+        currAirline = currAirline->next;
+    }
+
+    // Return the minimum price found for given locations
+    return make_pair(bestPrice, bestPath);
 }
 
 void delete_linked_list(airline *&head) {
@@ -310,6 +355,15 @@ void remove_flight_with_input(airline *&head) {
     cout << "There is no flight with id " << id;
 }
 
+void print_flight(flight *flight) {
+    cout << "#[";
+    cout << flight->ID << "|";
+    cout << flight->from << "->" << flight->to << "|";
+    cout << flight->hour << ":" << flight->min << "|";
+    cout << flight->price << "TRY";
+    cout << "]#";
+}
+
 void print_all(airline *head) {
     while (head) {
         cout << "###################################" << endl;
@@ -321,18 +375,38 @@ void print_all(airline *head) {
         flight *fTemp = head->flights;
         cout << "FLIGHTS: ";
         while (fTemp) {
-            cout << "#[";
-            cout << fTemp->ID << "|";
-            cout << fTemp->from << "->" << fTemp->to << "|";
-            cout << fTemp->hour << ":" << fTemp->min << "|";
-            cout << fTemp->price << "TRY";
-            cout << "]#";
-
+            print_flight(fTemp);
             fTemp = fTemp->next;  // Move to next flight
         }
         cout << endl;
 
         head = head->next;  // Move to next airline
+    }
+}
+
+void traverse_path(airline *&head, vector<int> &path) {
+    // Traverse the path and print the flights
+    for (int i = 0; i < path.size(); i++) {
+        int id = path[i];
+        // Search the id
+        airline *currAirline = head;
+        bool found = false;
+        while (currAirline) {  // Go over airlines
+            flight *currFlight = currAirline->flights;
+            while (currFlight) {  // Go over flights
+                if (currFlight->ID == id) {
+                    print_flight(currFlight);  // Print the flight that matches
+                    found = true;
+                    break;
+                }
+                currFlight = currFlight->next;
+            }
+
+            if (found) break;
+        }
+
+        // Print an arrow between, but not after the last one
+        if (i != path.size() - 1) cout << "->";
     }
 }
 
@@ -354,6 +428,10 @@ void printMainMenu() {
 void processMainMenu() {
     pair<vector<string>, vector<vector<flight>>> lines_flights;
     airline *head = nullptr;
+
+    string startLoc, stopLoc;  // Locations for the pathfinder
+    int transferCount;         // Maximum number of transfers for the pathfinder
+    pair<int, vector<int>> foundPath;
 
     char input;
     bool input_done = false;
@@ -393,7 +471,22 @@ void processMainMenu() {
                 break;
             case '5':
                 cout << "Commented out functionalities are going to be implemented" << endl;
-                // pathfinder(head);
+                cout << "Where are you now?" << endl;
+                cin >> startLoc;
+                cout << "Where do you want to go?" << endl;
+                cin >> stopLoc;
+                cout << "Maximum number of transfers:" << endl;
+                cin >> transferCount;
+
+                foundPath = pathfinder(head, startLoc, stopLoc, transferCount);
+                if (foundPath.second.size() == 0) {  // No path was found
+                    cout << "No path is available." << endl;
+                }
+                else {
+                    traverse_path(head, foundPath.second);
+                    cout << " $TOTAL PRICE: " << foundPath.first << endl;
+                }
+
                 break;
             case '6':
                 cout << "Exiting.." << endl;
@@ -403,7 +496,6 @@ void processMainMenu() {
         }
     } while (true);
 }
-//
 
 int main() {
     processMainMenu();
