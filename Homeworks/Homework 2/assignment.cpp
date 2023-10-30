@@ -204,8 +204,9 @@ void add_flight_with_input(airline *&head) {
     add_flight_to_list(currAirline->flights, new_flight);
 }
 
-// Create a linked list of flights that are ordered by time from a given flights vector
 flight *create_flight_list(vector<flight> &flights) {
+    // Create a linked list of flights that are ordered by time from a given flights vector
+
     flight *currF = nullptr;  // Pointer to current flight from the list
     for (int i = 0; i < flights.size(); i++) {
         flight *fToAdd = new flight(&flights[i]);  // Convert the flight from the vector into dynamic variable
