@@ -104,7 +104,7 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
     return make_pair(airlines, flights);
 }
 
-void add_flight_to_list(flight *&currF, flight *&fToAdd) {
+int add_flight_to_list(flight *&currF, flight *&fToAdd) {
     static int currentID = 0;  // Keep track of the current id for the flights
     fToAdd->ID = currentID;    // Assign the current id
 
@@ -156,6 +156,7 @@ void add_flight_to_list(flight *&currF, flight *&fToAdd) {
     }
 
     currentID++;  // Increment the current id after each addition
+    return currentID - 1;
 }
 
 void add_flight_with_input(airline *&head) {
@@ -201,7 +202,9 @@ void add_flight_with_input(airline *&head) {
     flight *new_flight = new flight(f, t, h, m, p);
 
     // Add the flight to the list
-    add_flight_to_list(currAirline->flights, new_flight);
+    int id = add_flight_to_list(currAirline->flights, new_flight);
+
+    cout << "Flight ID " << id << " is added to the list.." << endl;
 }
 
 flight *create_flight_list(vector<flight> &flights) {
@@ -330,8 +333,6 @@ void remove_flight_with_input(airline *&head) {
 
         while (currFlight) {             // Go over flights of that airline
             if (currFlight->ID == id) {  // Found the flight
-                cout << "Romeving flight id: " << id << endl;
-
                 flight *prev = currFlight->prev;
                 flight *next = currFlight->next;
                 delete currFlight;
@@ -348,6 +349,7 @@ void remove_flight_with_input(airline *&head) {
                     next->prev = prev;
                 }
 
+                cout << "Flight ID " << id << " is removed from the list.." << endl;
                 return;
             }
             currFlight = currFlight->next;
@@ -449,7 +451,7 @@ void processMainMenu() {
             case '0':
                 // cout << "Commented out functionalities are going to be implemented" << endl;
                 delete_linked_list(head);
-                cout << "Data is deleted!" << endl;
+                cout << "Data is is destroyed.." << endl;
                 input_done = false;
                 break;
             case '1':
@@ -465,7 +467,12 @@ void processMainMenu() {
                 break;
             case '2':
                 // cout << "Commented out functionalities are going to be implemented" << endl;
-                print_all(head);
+                if (head) {
+                    print_all(head);
+                }
+                else {
+                    cout << "List is empty.." << endl;
+                }
                 break;
             case '3':
                 // cout << "Commented out functionalities are going to be implemented" << endl;
@@ -486,13 +493,13 @@ void processMainMenu() {
 
                 foundPath = pathfinder(head, startLoc, stopLoc, transferCount);
                 if (foundPath.second.size() == 0) {  // No path was found
-                    cout << "No path is available." << endl;
+                    cout << "No path found between " << startLoc << " and " << stopLoc << endl;
                 }
                 else {
+                    cout << "##Best price path##" << endl;
                     traverse_path(head, foundPath.second);
                     cout << " $TOTAL PRICE: " << foundPath.first << endl;
                 }
-
                 break;
             case '6':
                 cout << "Exiting.." << endl;
