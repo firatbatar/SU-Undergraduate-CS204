@@ -320,6 +320,26 @@ void delete_linked_list(airline *&head) {
     }
 }
 
+void remove_airline(airline *&head, int id) {
+    // If we are trying to delete the head
+    if (head->ID == id) {
+        delete head;
+        head = nullptr;
+        return;
+    }
+
+    airline *currAirline = head;
+    while (currAirline->next) {  // We need the previous airline too
+        if (currAirline->next->ID == id) {
+            airline *temp = currAirline;
+            currAirline->next = temp->next;  // Previous' next is deleted one's next
+            delete temp;                     // Delete
+            return;
+        }
+        currAirline = currAirline->next;
+    }
+}
+
 void remove_flight_with_input(airline *&head) {
     // Get the id
     int id;
@@ -347,6 +367,11 @@ void remove_flight_with_input(airline *&head) {
 
                 if (next) {  // If next exits, make next's previous 'prev'
                     next->prev = prev;
+                }
+
+                if (!currAirline->flights) {  // If we deleted all flights from an airline
+                    // Delete the airline
+                    remove_airline(head, currAirline->ID);
                 }
 
                 cout << "Flight ID " << id << " is removed from the list.." << endl;
@@ -481,6 +506,9 @@ void processMainMenu() {
             case '4':
                 // cout << "Commented out functionalities are going to be implemented" << endl;
                 remove_flight_with_input(head);
+
+                // If we deleted the head, then list is now empty
+                if (!head) input_done = false;
                 break;
             case '5':
                 // cout << "Commented out functionalities are going to be implemented" << endl;
