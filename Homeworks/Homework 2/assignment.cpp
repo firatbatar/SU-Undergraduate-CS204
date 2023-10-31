@@ -46,16 +46,6 @@ struct airline {
     airline(const string &n, int id, airline *nt, flight *f) : name(n), ID(id), next(nt), flights(f) {}
 };
 
-struct locationMemo {  // Holds the best price and path for a location
-    string loc;
-    unsigned int price;
-    vector<int> path;
-
-    locationMemo() {}
-
-    locationMemo(string lc, unsigned int pc, vector<int> &pth) : loc(lc), price(pc), path(pth) {}
-};
-
 pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
     /// READ FLIGHTS///
     vector<string> airlines;
@@ -254,40 +244,10 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
     return head;
 }
 
-pair<bool, pair<int, vector<int>>> findInMem(vector<locationMemo> &mem, string loc) {
-    for (int i = 0; i < mem.size(); i++) {
-        locationMemo memLoc = mem[i];
-        if (memLoc.loc == loc) {
-            return make_pair(true, make_pair(memLoc.price, memLoc.path));
-        }
-    }
-
-    vector<int> temp(0);
-    return make_pair(false, make_pair(UINT_MAX, temp));
-}
-
 pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLoc, int tranferCount) {
     // TO DO: Implement
     // Hint: A recursive search seems like the best solution.
     // Hint: You don't have to use doubly linked list features
-    static vector<locationMemo> memLocations;
-    static string memStop;
-
-    if (memStop != stopLoc) {
-        // If the stop changes, clear the memory vector
-        memLocations.clear();
-    }
-    memStop = stopLoc;
-
-    pair<bool, pair<unsigned int, vector<int>>> memFind = findInMem(memLocations, startLoc);
-    if (memFind.first) {        // If the location already exists in the mem
-        return memFind.second;  // Return the already found price and path
-    }
-    vector<int> temp(0);
-    locationMemo newLoc = locationMemo(startLoc, UINT_MAX, temp);
-    int idx = memLocations.size();
-    memLocations.push_back(newLoc);
-
     airline *currAirline = head;
     unsigned int bestPrice = UINT_MAX;
     vector<int> bestPath;
@@ -295,7 +255,7 @@ pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, stri
         flight *currFlight = currAirline->flights;
         while (currFlight) {                // Go over each flight
             unsigned int price = UINT_MAX;  // Also start from max to ignore flights that don't match at all
-            vector<int> path(0);
+            vector<int> path;
 
             if (currFlight->from != startLoc) {
                 // If flight origin does not match start location, skip that flight
@@ -309,10 +269,9 @@ pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, stri
                 path.push_back(currFlight->ID);
             }
             else {  // If flight target doesn't match
-                if (tranferCount > 1) {
+                if (tranferCount > 0) {
                     // If there are available transfers, make a new search from this flight
-                    pair<unsigned int, vector<int>> transferFlight =
-                        pathfinder(head, currFlight->to, stopLoc, tranferCount - 1);
+                    pair<int, vector<int>> transferFlight = pathfinder(head, currFlight->to, stopLoc, tranferCount - 1);
 
                     if (transferFlight.second.size() > 0) {  // If there is a valid transfer continuation
                         // Price will be this flight's price + transfers' price
@@ -333,10 +292,6 @@ pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, stri
 
         currAirline = currAirline->next;
     }
-
-    // Add the location to the mem
-    memLocations[idx].price = bestPrice;
-    memLocations[idx].path = bestPath;
 
     // Return the minimum price found for given locations
     return make_pair(bestPrice, bestPath);
@@ -521,7 +476,7 @@ void processMainMenu() {
                 remove_flight_with_input(head);
                 break;
             case '5':
-                cout << "Commented out functionalities are going to be implemented" << endl;
+                // cout << "Commented out functionalities are going to be implemented" << endl;
                 cout << "Where are you now?" << endl;
                 cin >> startLoc;
                 cout << "Where do you want to go?" << endl;
