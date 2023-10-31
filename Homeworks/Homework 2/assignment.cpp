@@ -46,6 +46,16 @@ struct airline {
     airline(const string &n, int id, airline *nt, flight *f) : name(n), ID(id), next(nt), flights(f) {}
 };
 
+struct locationMemo {  // Holds the best price and path for a location
+    string loc;
+    unsigned int price;
+    vector<int> path;
+
+    locationMemo() {}
+
+    locationMemo(string lc, unsigned int pc, vector<int> &pth) : loc(lc), price(pc), path(pth) {}
+};
+
 pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
     /// READ FLIGHTS///
     vector<string> airlines;
@@ -244,18 +254,48 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
     return head;
 }
 
-pair<int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLoc, int tranferCount) {
+pair<bool, pair<int, vector<int>>> findInMem(vector<locationMemo> &mem, string loc) {
+    for (int i = 0; i < mem.size(); i++) {
+        locationMemo memLoc = mem[i];
+        if (memLoc.loc == loc) {
+            return make_pair(true, make_pair(memLoc.price, memLoc.path));
+        }
+    }
+
+    vector<int> temp(0);
+    return make_pair(false, make_pair(UINT_MAX, temp));
+}
+
+pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLoc, int tranferCount) {
     // TO DO: Implement
     // Hint: A recursive search seems like the best solution.
     // Hint: You don't have to use doubly linked list features
+    static vector<locationMemo> memLocations;
+    static string memStop;
+
+    if (memStop != stopLoc) {
+        // If the stop changes, clear the memory vector
+        memLocations.clear();
+    }
+    memStop = stopLoc;
+
+    pair<bool, pair<unsigned int, vector<int>>> memFind = findInMem(memLocations, startLoc);
+    if (memFind.first) {        // If the location already exists in the mem
+        return memFind.second;  // Return the already found price and path
+    }
+    vector<int> temp(0);
+    locationMemo newLoc = locationMemo(startLoc, UINT_MAX, temp);
+    int idx = memLocations.size();
+    memLocations.push_back(newLoc);
+
     airline *currAirline = head;
-    int bestPrice = INT_MAX;
-    static vector<int> bestPath;
+    unsigned int bestPrice = UINT_MAX;
+    vector<int> bestPath;
     while (currAirline) {  // Go over every airline to find matching flights
         flight *currFlight = currAirline->flights;
-        while (currFlight) {      // Go over each flight
-            int price = INT_MAX;  // Also start from max to ignore flights that don't match at all
-            vector<int> path = {currFlight->ID};
+        while (currFlight) {                // Go over each flight
+            unsigned int price = UINT_MAX;  // Also start from max to ignore flights that don't match at all
+            vector<int> path(0);
 
             if (currFlight->from != startLoc) {
                 // If flight origin does not match start location, skip that flight
@@ -266,15 +306,18 @@ pair<int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLo
             if (currFlight->to == stopLoc) {
                 // If flight target matches the target stop location, return that flight
                 price = currFlight->price;  // Add price of this flight
+                path.push_back(currFlight->ID);
             }
             else {  // If flight target doesn't match
                 if (tranferCount > 1) {
                     // If there are available transfers, make a new search from this flight
-                    pair<int, vector<int>> transferFlight = pathfinder(head, currFlight->to, stopLoc, tranferCount - 1);
+                    pair<unsigned int, vector<int>> transferFlight =
+                        pathfinder(head, currFlight->to, stopLoc, tranferCount - 1);
 
                     if (transferFlight.second.size() > 0) {  // If there is a valid transfer continuation
                         // Price will be this flight's price + transfers' price
                         price = currFlight->price + transferFlight.first;
+                        path.push_back(currFlight->ID);
                         path.insert(path.end(), transferFlight.second.begin(), transferFlight.second.end());
                     }
                 }
@@ -290,6 +333,10 @@ pair<int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLo
 
         currAirline = currAirline->next;
     }
+
+    // Add the location to the mem
+    memLocations[idx].price = bestPrice;
+    memLocations[idx].path = bestPath;
 
     // Return the minimum price found for given locations
     return make_pair(bestPrice, bestPath);
@@ -357,12 +404,12 @@ void remove_flight_with_input(airline *&head) {
 }
 
 void print_flight(flight *flight) {
-    cout << "#[";
+    cout << "[";
     cout << flight->ID << "|";
     cout << flight->from << "->" << flight->to << "|";
     cout << flight->hour << ":" << flight->min << "|";
     cout << flight->price << "TRY";
-    cout << "]#";
+    cout << "]";
 }
 
 void print_all(airline *head) {
@@ -376,7 +423,9 @@ void print_all(airline *head) {
         flight *fTemp = head->flights;
         cout << "FLIGHTS: ";
         while (fTemp) {
+            cout << "#";
             print_flight(fTemp);
+            cout << "#";
             fTemp = fTemp->next;  // Move to next flight
         }
         cout << endl;
@@ -404,6 +453,7 @@ void traverse_path(airline *&head, vector<int> &path) {
             }
 
             if (found) break;
+            currAirline = currAirline->next;
         }
 
         // Print an arrow between, but not after the last one
