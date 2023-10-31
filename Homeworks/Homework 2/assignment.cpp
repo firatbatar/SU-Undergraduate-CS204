@@ -22,8 +22,6 @@ struct flight {
     flight *next;
     flight *prev;
 
-    // TO DO: implement constructor
-    // Hint: You may need to implement multiple constructors
     flight() {}
 
     flight(const string &f, const string &t, int h, int m, int p)
@@ -39,8 +37,6 @@ struct airline {
     airline *next;
     flight *flights;
 
-    // TO DO: implement constructor
-    // Hint: You may need to implement multiple constructors
     airline() {}
 
     airline(const string &n, int id, airline *nt, flight *f) : name(n), ID(id), next(nt), flights(f) {}
@@ -105,47 +101,50 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
 }
 
 int add_flight_to_list(flight *&currF, flight *&fToAdd) {
-    static int currentID = 0;  // Keep track of the current id for the flights
+    // Add a given flight to a given flights list
+
+    static int currentID = 0;  // Keep track of the current id for the flights as static in this function
+                               // So it assigns the next id every time time function is called
     fToAdd->ID = currentID;    // Assign the current id
 
     if (!currF) {        // If flights list is empty
         currF = fToAdd;  // Make the current flight head
     }
     else {
-        int fToAddTime = 60 * fToAdd->hour + fToAdd->min;  // Time of the flight to add the list
+        int fToAddTime = 60 * fToAdd->hour + fToAdd->min;  // Time of the flight-to-add
         int currTime = 60 * currF->hour + currF->min;      // Time of the current flight pointer from the list
-        while (currF->next && fToAddTime >= currTime) {    // While the flight to add is later than the current
-                                                           // flight, move current flight forward
+        while (currF->next && fToAddTime >= currTime) {    // While the flight-to-add is later than
+                                                           // the current flight, move current flight forward
             currF = currF->next;
-            currTime = 60 * currF->hour + currF->min;
+            currTime = 60 * currF->hour + currF->min;  // Update current flight's time
         }
 
-        while (currF->prev && fToAddTime <= currTime) {  // While the flight to add is earlier than the current
-                                                         // flight, move current flight backward
+        while (currF->prev && fToAddTime <= currTime) {  // While the flight to add is earlier than
+                                                         //  the current flight, move current flight backward
             currF = currF->prev;
-            currTime = 60 * currF->hour + currF->min;
+            currTime = 60 * currF->hour + currF->min;  // Update current flight's time
         }
 
-        if (fToAddTime > currTime) {  // If flight to add must come later
+        if (fToAddTime > currTime) {  // If flight-to-add must come later
             // Add new flight in between of currF and its next (temp)
             flight *temp = currF->next;
             currF->next = fToAdd;
             fToAdd->prev = currF;
 
-            if (temp) {
-                fToAdd->next = temp;
-                temp->prev = fToAdd;
+            if (temp) {               // If temp is not a null pointer
+                fToAdd->next = temp;  // flight-to-add's next points to temp
+                temp->prev = fToAdd;  // temp's prev also points to the new flight
             }
         }
-        else {  // If flight to add must come earlier
+        else {  // If flight-to-add must come earlier
             // Add new flight in between of currF and its previous (temp)
             flight *temp = currF->prev;
             currF->prev = fToAdd;
             fToAdd->next = currF;
 
-            if (temp) {
-                fToAdd->prev = temp;
-                temp->next = fToAdd;
+            if (temp) {               // If temp is not a null pointer
+                fToAdd->prev = temp;  // flight-to-add's prev points to temp
+                temp->next = fToAdd;  // temp's next also points to the new flight
             }
         }
     }
@@ -155,8 +154,8 @@ int add_flight_to_list(flight *&currF, flight *&fToAdd) {
         currF = currF->prev;
     }
 
-    currentID++;  // Increment the current id after each addition
-    return currentID - 1;
+    currentID++;           // Increment the current id after each addition
+    return currentID - 1;  // Return the new id generated
 }
 
 void add_flight_with_input(airline *&head) {
@@ -189,12 +188,13 @@ void add_flight_with_input(airline *&head) {
         int newAirlineID = 1;        // Start from one since while loop won't count the last element
         currAirline = head;          // Go back to head airline
         while (currAirline->next) {  // Count the airlines for a new ID
+                                     // This also moves current airline to the last element to add the new
             currAirline = currAirline->next;
             newAirlineID++;
         }
 
         airline *newAirline = new airline(a, newAirlineID, nullptr, nullptr);
-        currAirline->next = newAirline;   // currAirline is already at last element
+        currAirline->next = newAirline;   // Add the new airline after the current one
         currAirline = currAirline->next;  // Move currAirline to the new airline
     }
 
@@ -214,33 +214,30 @@ flight *create_flight_list(vector<flight> &flights) {
     for (int i = 0; i < flights.size(); i++) {
         flight *fToAdd = new flight(&flights[i]);  // Convert the flight from the vector into dynamic variable
 
-        add_flight_to_list(currF, fToAdd);
+        add_flight_to_list(currF, fToAdd);  // Add the new flight
     }
 
-    // Go until the start of the list
-    while (currF->prev) {
-        currF = currF->prev;
-    }
+    // Go back to the head of the flights
+    while (currF->prev) currF = currF->prev;
 
-    return currF;
+    return currF;  // Return the head
 }
 
 airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flight>> &flights) {
-    // TO DO: Implement
     airline *head = nullptr;     // Head of the list to return
     airline *current = nullptr;  // Current airline to keep the list order
     for (int i = 0; i < airlines.size(); i++) {
         // Get the flights first
         flight *fHead = create_flight_list(flights[i]);
 
-        airline *temp = new airline(airlines[i], i, nullptr, fHead);  // Create a new airline that points to nullptr
+        airline *temp = new airline(airlines[i], i, nullptr, fHead);  // Create a new airline that points to a nullptr
         if (!head) {  // If the list is empty, the new airline is the head
             head = temp;
             current = temp;
         }
-        else {
-            current->next = temp;
-            current = temp;
+        else {                     // If it's not
+            current->next = temp;  // Add the new to the end
+            current = temp;        // Move the current
         }
     }
 
@@ -248,28 +245,27 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
 }
 
 pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, string stopLoc, int tranferCount) {
-    // TO DO: Implement
-    // Hint: A recursive search seems like the best solution.
-    // Hint: You don't have to use doubly linked list features
+    // Best price and path found from the search
+    unsigned int bestPrice = UINT_MAX;  // Set to max possible
+    vector<int> bestPath;               // An empty vector that keeps the id of the used flights for that travel
+
     airline *currAirline = head;
-    unsigned int bestPrice = UINT_MAX;
-    vector<int> bestPath;
     while (currAirline) {  // Go over every airline to find matching flights
         flight *currFlight = currAirline->flights;
         while (currFlight) {                // Go over each flight
-            unsigned int price = UINT_MAX;  // Also start from max to ignore flights that don't match at all
-            vector<int> path;
+            vector<int> path;               // Vector to keep track of the path
+            unsigned int price = UINT_MAX;  // Cost of the travel from this flight to the stop location
+                                            // Also start from max to ignore flights that don't match at all
 
-            if (currFlight->from != startLoc) {
-                // If flight origin does not match start location, skip that flight
+            if (currFlight->from != startLoc) {  // If flight origin does not match start location, skip that flight
                 currFlight = currFlight->next;
                 continue;
             }
 
-            if (currFlight->to == stopLoc) {
-                // If flight target matches the target stop location, return that flight
-                price = currFlight->price;  // Add price of this flight
-                path.push_back(currFlight->ID);
+            if (currFlight->to == stopLoc) {     // If flight target matches the target stop location,
+                                                 // then we found a feasible travel
+                price = currFlight->price;       // Only price is this flight's price
+                path.push_back(currFlight->ID);  // Only flight taken is this flight
             }
             else {  // If flight target doesn't match
                 if (tranferCount > 0) {
@@ -279,7 +275,8 @@ pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, stri
                     if (transferFlight.second.size() > 0) {  // If there is a valid transfer continuation
                         // Price will be this flight's price + transfers' price
                         price = currFlight->price + transferFlight.first;
-                        path.push_back(currFlight->ID);
+                        path.push_back(currFlight->ID);  // Path will start from this flight
+                                                         // will continue with the path after the transfer
                         path.insert(path.end(), transferFlight.second.begin(), transferFlight.second.end());
                     }
                 }
@@ -296,12 +293,11 @@ pair<unsigned int, vector<int>> pathfinder(airline *&head, string startLoc, stri
         currAirline = currAirline->next;
     }
 
-    // Return the minimum price found for given locations
+    // Return the minimum price and corresponding path(flights' ids) found for given locations
     return make_pair(bestPrice, bestPath);
 }
 
 void delete_linked_list(airline *&head) {
-    // TO DO: Implement
     while (head) {
         // Make the head next airline before deleting the head
         airline *temp = head;
@@ -387,6 +383,8 @@ void remove_flight_with_input(airline *&head) {
 }
 
 void print_flight(flight *flight) {
+    // Print the flight information in the form
+    // "[ID|FROM->TO|HOUR:MINUTE|PRICE]"
     cout << "[";
     cout << flight->ID << "|";
     cout << flight->from << "->" << flight->to << "|";
@@ -396,6 +394,7 @@ void print_flight(flight *flight) {
 }
 
 void print_all(airline *head) {
+    // Print all the airlines their flights
     while (head) {
         cout << "###################################" << endl;
         // Airline information
@@ -421,6 +420,7 @@ void traverse_path(airline *&head, vector<int> &path) {
     // Traverse the path and print the flights
     for (int i = 0; i < path.size(); i++) {
         int id = path[i];
+
         // Search the id
         airline *currAirline = head;
         bool found = false;
@@ -435,11 +435,11 @@ void traverse_path(airline *&head, vector<int> &path) {
                 currFlight = currFlight->next;
             }
 
-            if (found) break;
-            currAirline = currAirline->next;
+            if (found) break;                 // If found, stop
+            currAirline = currAirline->next;  // If not, continue
         }
 
-        // Print an arrow between, but not after the last one
+        // Print an arrow in between, but not after the last one
         if (i != path.size() - 1) cout << "->";
     }
 }
@@ -475,7 +475,6 @@ void processMainMenu() {
         cin >> input;
         switch (input) {
             case '0':
-                // cout << "Commented out functionalities are going to be implemented" << endl;
                 delete_linked_list(head);
                 cout << "Data is is destroyed.." << endl;
                 input_done = false;
@@ -492,7 +491,6 @@ void processMainMenu() {
                 input_done = true;
                 break;
             case '2':
-                // cout << "Commented out functionalities are going to be implemented" << endl;
                 if (head) {
                     print_all(head);
                 }
@@ -501,18 +499,15 @@ void processMainMenu() {
                 }
                 break;
             case '3':
-                // cout << "Commented out functionalities are going to be implemented" << endl;
                 add_flight_with_input(head);
                 break;
             case '4':
-                // cout << "Commented out functionalities are going to be implemented" << endl;
                 remove_flight_with_input(head);
 
                 // If we deleted the head, then list is now empty
                 if (!head) input_done = false;
                 break;
             case '5':
-                // cout << "Commented out functionalities are going to be implemented" << endl;
                 cout << "Where are you now?" << endl;
                 cin >> startLoc;
                 cout << "Where do you want to go?" << endl;
@@ -541,7 +536,5 @@ void processMainMenu() {
 
 int main() {
     processMainMenu();
-    // Comply with the provided structs and specified linked list structure for a seamless grading
-
     return 0;
 }
