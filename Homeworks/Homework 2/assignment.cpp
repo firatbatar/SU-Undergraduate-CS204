@@ -323,8 +323,9 @@ void delete_linked_list(airline *&head) {
 void remove_airline(airline *&head, int id) {
     // If we are trying to delete the head
     if (head->ID == id) {
-        delete head;
-        head = nullptr;
+        airline *temp = head;
+        head = temp->next;
+        delete temp;
         return;
     }
 
