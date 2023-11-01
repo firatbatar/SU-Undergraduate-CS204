@@ -11,6 +11,8 @@
 
 using namespace std;
 
+int airlineID = 0;
+
 struct flight {
     string from;
     string to;
@@ -24,11 +26,9 @@ struct flight {
 
     flight() {}
 
-    flight(const string &f, const string &t, int h, int m, int p)
-        : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
+    flight(const string &f, const string &t, int h, int m, int p) : from(f), to(t), hour(h), min(m), price(p), next(nullptr), prev(nullptr), ID(0) {}
 
-    flight(flight *f)
-        : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(0) {}
+    flight(flight *f) : from(f->from), to(f->to), hour(f->hour), min(f->min), price(f->price), next(f->next), prev(f->next), ID(0) {}
 };
 
 struct airline {
@@ -87,8 +87,7 @@ pair<vector<string>, vector<vector<flight>>> read_files(bool input_done) {
             lines.push_back(line);
             line_no += 1;
             if (line_no % 5 == 0) {
-                flight a_flight(lines[line_no - 5], lines[line_no - 4], stoi(lines[line_no - 3]),
-                                stoi(lines[line_no - 2]), stoi(lines[line_no - 1]));
+                flight a_flight(lines[line_no - 5], lines[line_no - 4], stoi(lines[line_no - 3]), stoi(lines[line_no - 2]), stoi(lines[line_no - 1]));
                 flights[vector_location].push_back(a_flight);
             }
         }
@@ -179,23 +178,33 @@ void add_flight_with_input(airline *&head) {
 
     // Find the airline
     airline *currAirline = head;
+    airline *prevAirline = nullptr;  // Keep the prevAirline to avoid traversing the list again while adding a new airline
     while (currAirline && currAirline->name != a) {
+        prevAirline = currAirline;
         currAirline = currAirline->next;
     }
 
     if (!currAirline) {  // Airline does not exits
         // Create a new airline
-        int newAirlineID = 1;        // Start from one since while loop won't count the last element
-        currAirline = head;          // Go back to head airline
-        while (currAirline->next) {  // Count the airlines for a new ID
-                                     // This also moves current airline to the last element to add the new
-            currAirline = currAirline->next;
-            newAirlineID++;
-        }
+        airline *newAirline = new airline(a, airlineID, nullptr, nullptr);
+        airlineID++;
 
-        airline *newAirline = new airline(a, newAirlineID, nullptr, nullptr);
-        currAirline->next = newAirline;   // Add the new airline after the current one
-        currAirline = currAirline->next;  // Move currAirline to the new airline
+        /*
+        Note that this if will not be triggered since list is never empty due to input_done check in the
+        processMainMenu. Adding flight to an empty list and then reading files will create problems, since file reading
+        assumes that list is empty. (Basically it deletes the existing data.)
+
+        One must either do the input_done check or must make input_done = true after adding a new flight.
+        */
+        if (!prevAirline) {     // If the list empty
+            head = newAirline;  // The new airline is the head
+            currAirline = newAirline;
+        }
+        else {  // If list is not empty, then prevAirline is the last airline
+
+            prevAirline->next = newAirline;
+            currAirline = newAirline;  // Make currAirline the the new airline
+        }
     }
 
     // Create the flight
@@ -230,7 +239,8 @@ airline *make_linked_list_structure(vector<string> &airlines, vector<vector<flig
         // Get the flights first
         flight *fHead = create_flight_list(flights[i]);
 
-        airline *temp = new airline(airlines[i], i, nullptr, fHead);  // Create a new airline that points to a nullptr
+        airline *temp = new airline(airlines[i], airlineID, nullptr, fHead);  // Create a new airline that points to a nullptr
+        airlineID++;
         if (!head) {  // If the list is empty, the new airline is the head
             head = temp;
             current = temp;
@@ -499,7 +509,12 @@ void processMainMenu() {
                 }
                 break;
             case '3':
-                add_flight_with_input(head);
+                if (head && input_done) {
+                    add_flight_with_input(head);
+                }
+                else {
+                    cout << "List is empty or input is not done, can't add flight";
+                }
                 break;
             case '4':
                 remove_flight_with_input(head);
