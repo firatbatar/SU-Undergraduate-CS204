@@ -189,22 +189,9 @@ void add_flight_with_input(airline *&head) {
         airline *newAirline = new airline(a, airlineID, nullptr, nullptr);
         airlineID++;
 
-        /*
-        Note that this if will not be triggered since list is never empty due to input_done check in the
-        processMainMenu. Adding flight to an empty list and then reading files will create problems, since file reading
-        assumes that list is empty. (Basically it deletes the existing data.)
-
-        One must either do the input_done check or must make input_done = true after adding a new flight.
-        */
-        if (!prevAirline) {     // If the list empty
-            head = newAirline;  // The new airline is the head
-            currAirline = newAirline;
-        }
-        else {  // If list is not empty, then prevAirline is the last airline
-
-            prevAirline->next = newAirline;
-            currAirline = newAirline;  // Make currAirline the the new airline
-        }
+        // prevAirline is the last airline
+        prevAirline->next = newAirline;
+        currAirline = newAirline;  // Make currAirline the the new airline
     }
 
     // Create the flight
@@ -509,17 +496,12 @@ void processMainMenu() {
                 }
                 break;
             case '3':
-                if (head && input_done) {
-                    add_flight_with_input(head);
-                }
-                else {
-                    cout << "List is empty or input is not done, can't add flight";
-                }
+                add_flight_with_input(head);
                 break;
             case '4':
                 remove_flight_with_input(head);
 
-                // If we deleted the head, then list is now empty
+                // If we deleted all the flights, then list is now empty
                 if (!head) input_done = false;
                 break;
             case '5':
