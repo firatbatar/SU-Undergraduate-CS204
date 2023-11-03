@@ -13,21 +13,19 @@ The name of the public clear function was modified
 #include <string>
 using namespace std;
 
-struct StackNode
-{
+struct StackNode {
 	string value;
 	StackNode *next;
 };
 
 
-class DynamicStringStack
-{
+class DynamicStringStack {
 	private:
 		StackNode *top;
 		StackNode* GetTopPointer(DynamicStringStack myStack);
 
 	public:
-		//TODO:Add the constructor with no parameters
+		DynamicStringStack();
 		void push(string);
 		void pop(string &);
 		bool isEmpty(void);

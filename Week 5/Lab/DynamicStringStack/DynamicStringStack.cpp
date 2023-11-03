@@ -11,61 +11,49 @@ The name of the public clear function was modified
 #include "DynamicStringStack.h"
 using namespace std;
 
-//Constructor
-DynamicStringStack::DynamicStringStack()
-{
-	top=nullptr;
+// Constructor
+DynamicStringStack::DynamicStringStack() {
+	top = nullptr;
 }
 
-StackNode* DynamicStringStack::GetTopPointer(DynamicStringStack myStack)
-{
+StackNode* DynamicStringStack::GetTopPointer(DynamicStringStack myStack) {
 	return myStack.top;
 }
 
-//Push back elements to the stack
-void DynamicStringStack::push(string elmt)
-{
+// Push back elements to the stack
+void DynamicStringStack::push(string elmt) {
 	StackNode *newNode;
 
 	newNode = new StackNode;
 	newNode->value = elmt;
 
-	if(isEmpty())
-	{
-		//TODO: Insert the element when the stack is empty
+	if(isEmpty()) {
+		top = newNode;
+		top->next = nullptr;
 	}
-	else
-	{
+	else {
 		newNode->next = top;
 		top = newNode;
 	}
 }
-//Pop up elements from the stack
-void DynamicStringStack::pop(string &elmt)
-{
+
+// Pop up elements from the stack
+void DynamicStringStack::pop(string &elmt) {
 	StackNode *temp;
 
-	if(isEmpty())
-	{
-		cout<<"Stack is empty!\n";
+	if(isEmpty()) {
+		cout << "Stack is empty!\n";
 	}
+	else {
+		StackNode *temp = top;
+		top = top->next;
 
-	else 
-	{
-        //TODO: delete the element
+		elmt = temp->value;
+		delete temp;
 	}
 }
 
-//If the stack is empty check function
-bool DynamicStringStack::isEmpty()
-{
-	bool status;
-
-	if(top==nullptr)
-		status=true;
-
-	else 
-		status=false;
-
-	return status;
+// If the stack is empty check function
+bool DynamicStringStack::isEmpty() {
+	return top == nullptr; 
 }
