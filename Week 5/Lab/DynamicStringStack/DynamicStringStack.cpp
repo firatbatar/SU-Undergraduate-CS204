@@ -7,7 +7,6 @@ The name of the public clear function was modified
 */
 
 #include "DynamicStringStack.h"
-
 #include <iostream>
 using namespace std;
 

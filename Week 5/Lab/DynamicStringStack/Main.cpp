@@ -6,7 +6,6 @@ Push Back, Pop Up, Print, Clear
 */
 
 #include <iostream>
-
 #include "DynamicStringStack.h"
 #include "strutils.h"
 
