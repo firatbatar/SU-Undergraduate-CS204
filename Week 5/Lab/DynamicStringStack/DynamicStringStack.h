@@ -6,7 +6,6 @@ The name of the public clear function was modified
 (in order to prevent function overloading)
 */
 
-
 #ifndef DYNAMICSTRINGSTACK_H
 #define DYNAMICSTRINGSTACK_H
 
@@ -14,22 +13,20 @@ The name of the public clear function was modified
 using namespace std;
 
 struct StackNode {
-	string value;
-	StackNode *next;
+    string value;
+    StackNode *next;
 };
-
 
 class DynamicStringStack {
-	private:
-		StackNode *top;
-		StackNode* GetTopPointer(DynamicStringStack myStack);
+   private:
+    StackNode *top;
+    StackNode *GetTopPointer(DynamicStringStack myStack);
 
-	public:
-		DynamicStringStack();
-		void push(string);
-		void pop(string &);
-		bool isEmpty(void);
+   public:
+    DynamicStringStack();
+    void push(string);
+    void pop(string &);
+    bool isEmpty(void);
 };
-
 
 #endif
