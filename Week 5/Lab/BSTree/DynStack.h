@@ -1,17 +1,17 @@
 #include "bstree.h"
 
 struct StackNode {
-	tnode* node;
-	StackNode *next;
+    tnode *node;
+    StackNode *next;
 };
 
 class DynStack {
-private:
-	StackNode *top;
+   private:
+    StackNode *top;
 
-public:
-	DynStack(void);
-	void push(tnode*);
-	void pop(tnode* &);
-	bool isEmpty(void);
+   public:
+    DynStack(void);
+    void push(tnode *);
+    void pop(tnode *&);
+    bool isEmpty(void);
 };
