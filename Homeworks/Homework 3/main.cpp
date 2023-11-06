@@ -195,8 +195,12 @@ void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &stud
     }
     else if (!studentsQueue.isEmpty()) {
         instructorRequestCount = 0;
-        // cout << "Instructors queue is empty. Proceeding with students queue..." << endl;
-        // cout << "10 instructors are served. Taking 1 student from the queue..." << endl;
+        if (!instructorsQueue.isEmpty()) {
+            cout << "Instructors queue is empty. Proceeding with students queue..." << endl;
+        }
+        else {
+            cout << "10 instructors are served. Taking 1 student from the queue..." << endl;
+        }
 
         studentsQueue.dequeue(currJob, requester);
         cout << "Processing " << requester->name << "'s request (with ID " << requester->ID << ") of service (function):\n" << currJob->name << endl;
@@ -213,13 +217,16 @@ void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &stud
 
         if (commandType == "define") {
             commmonStack.push(currCommand, currJob);
+            requester->debt += 1;
         }
         else if (commandType == "print") {
             printStack(commmonStack, currJob->name);
+            requester->debt += 2;
         }
         else if (commandType == "call") {
             string funcToCallName = currCommand->parameter;
             Service *funcToCall = findService(serviceHead, funcToCallName);
+            requester->debt += 5;
 
             cout << "Calling " << funcToCallName << " from " << currJob->name << endl;
             if (funcToCall) {
@@ -326,9 +333,7 @@ void printServices(Service *serviceHead) {
     }
 }
 
-User *findUser(string name, int id) {
-    static User *users = nullptr;
-
+User *findUser(User *&users, string name, int id) {
     if (users) {
         User *currUser = users;
         while (currUser) {
@@ -346,7 +351,7 @@ User *findUser(string name, int id) {
     return newUser;
 }
 
-void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue) {
+void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue, User *&users) {
     string serviceName;
     cout << "Add a service (function) that the instructor wants to use:" << endl;
     cin >> serviceName;
@@ -366,13 +371,13 @@ void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue) {
     cout << "Give insturctor's ID (an int): ";
     cin >> instructorID;
 
-    User *requester = findUser(instructorName, instructorID);
+    User *requester = findUser(users, instructorName, instructorID);
     instructorsQueue.enqueue(serviceToAdd, requester);
     cout << "Prof. " << instructorName << "'s service request of " << serviceName << " has been put in the instructor's queue." << endl
          << "Waiting to be served..." << endl;
 }
 
-void addStudentWorkload(Service *serviceHead, Queue &studentsQueue) {
+void addStudentWorkload(Service *serviceHead, Queue &studentsQueue, User *&users) {
     string serviceName;
     cout << "Add a service (function) that the student wants to use:" << endl;
     cin >> serviceName;
@@ -392,9 +397,17 @@ void addStudentWorkload(Service *serviceHead, Queue &studentsQueue) {
     cout << "Give student's ID (an int): ";
     cin >> studentID;
 
-    User *requester = findUser(studentName, studentID);
+    User *requester = findUser(users, studentName, studentID);
     studentsQueue.enqueue(serviceToAdd, requester);
     cout << studentName << "'s service request of " << serviceName << " has been put in the student's queue." << endl << "Waiting to be served..." << endl;
+}
+
+void displayUsers(User *&users) {
+    User *currentUser = users;
+    while (currentUser) {
+        cout << "Name: " << currentUser->name << " ID: " << currentUser->ID << " " << currentUser->debt << " TRY" << endl;
+        currentUser = currentUser->next;
+    }
 }
 
 int main() {
@@ -403,6 +416,8 @@ int main() {
     if (!isFileReadSuccessful) return 0;
 
     printServices(serviceHead);
+
+    User *users = nullptr;
 
     Queue instructorsQueue;
     Queue studentsQueue;
@@ -424,16 +439,16 @@ int main() {
                 cout << "PROGRAM EXITING ... " << endl;
                 exit(0);
             case 1:
-                addInstructorWorkload(serviceHead, instructorsQueue);
+                addInstructorWorkload(serviceHead, instructorsQueue, users);
                 break;
             case 2:
-                addStudentWorkload(serviceHead, studentsQueue);
+                addStudentWorkload(serviceHead, studentsQueue, users);
                 break;
             case 3:
                 processWorkload(serviceHead, instructorsQueue, studentsQueue);
                 break;
             case 4:
-                // displayUsers();
+                displayUsers(users);
                 break;
             default:
                 cout << "INVALID OPTION!!! Try again" << endl;
