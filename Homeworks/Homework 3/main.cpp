@@ -37,27 +37,28 @@ struct QueueNode {
 class Queue {
    private:
     QueueNode *head;
+    QueueNode *rear;
 
    public:
-    Queue() : head(nullptr) {}
+    Queue() : head(nullptr), rear(nullptr) {}
     bool isEmpty() { return !head; }
 
-    void push(service *&new_service) {
+    void enqueue(service *&new_service) {
         if (isEmpty()) {
             head = new QueueNode(new_service);
+            rear = head;
         }
         else {
-            QueueNode *temp = new QueueNode(new_service);
-            temp->next = head;
-            head = temp;
+            rear->next = new QueueNode(new_service);
+            rear = rear->next;
         }
     }
 
-    bool pop(service *&popped) {
+    bool dequeue(service *&popped) {
         if (!isEmpty()) {
             QueueNode *temp = head;
+            popped = head->service_p;
             head = head->next;
-            popped = temp->service_p;
             delete temp;
             return true;
         }
@@ -219,7 +220,7 @@ void addInstructorWorkload(service *f_head, Queue &instructorsQueue) {
     cout << "Give insturctor's ID (an int): ";
     cin >> instructor_id;
 
-    instructorsQueue.push(current_service);
+    instructorsQueue.enqueue(current_service);
     cout << "Prof. " << instructor_name << "'s service request of " << service_name << " has been put in the instructor's queue." << endl
          << "Waiting to be served..." << endl;
 }
@@ -249,7 +250,7 @@ void addStudentWorkload(service *f_head, Queue &studentsQueue) {
     cout << "Give student's ID (an int): ";
     cin >> student_id;
 
-    studentsQueue.push(current_service);
+    studentsQueue.enqueue(current_service);
     cout << student_name << "'s service request of " << service_name << " has been put in the student's queue." << endl << "Waiting to be served..." << endl;
 }
 
