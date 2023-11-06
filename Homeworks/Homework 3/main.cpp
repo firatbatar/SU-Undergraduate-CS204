@@ -69,10 +69,54 @@ class Queue {
     }
 };
 
+struct StackNode {
+    command *command_p;
+    StackNode *next;
+
+    StackNode(){};
+    StackNode(command *c, StackNode *nt = nullptr) : command_p(c), next(nt){};
+};
+
+class Stack {
+   private:
+    StackNode *head;
+
+   public:
+    Stack() : head(nullptr){};
+
+    bool isEmpty() { return !head; };
+
+    void push(command *new_command) {
+        if (isEmpty()) {
+            head = new StackNode(new_command);
+        }
+        else {
+            StackNode *temp = new StackNode(new_command, head);
+            head = temp;
+        }
+    }
+
+    bool pop(command *&popped) {
+        if (!isEmpty()) {
+            StackNode *temp = head;
+            popped = temp->command_p;
+            head = head->next;
+            delete temp;
+            return true;
+        }
+        else {
+            cout << "Stack is empty!" << endl;
+            return false;
+        }
+    }
+};
+
 // TODO: Modify this part to make sure to impelement the logic for 10 requests for instructors and 1 request for students
-/*
-void processWorkload() {
-    if (!instructorsQueue.isEmpty()) {
+void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
+    static int instructorRequestCount = 0;
+    if (!instructorsQueue.isEmpty() && instructorRequestCount != 10) {
+        instructorRequestCount++;
+
         cout << "Processing instructors queue..." << endl;
 
         cout << "Processing "
@@ -80,16 +124,15 @@ void processWorkload() {
              << "'s request (with ID "
              << "JOB ID"
              << ") of service (function):\n"
-             << "FUNCTION NAME" <
-            endl;
+             << "FUNCTION NAME" << endl;
         // You need to implement the processWorkload --> you can modify inputs
         // processWorkload(...);
 
         cout << "GOING BACK TO MAIN MENU" << endl;
     }
     else if (!studentsQueue.isEmpty()) {
-        // TODO: This should print when you implemented 10 requests for instructors and 1 request for students logic
-        // cout<<"10 instructors are served. Taking 1 student from the queue..."<<endl;
+        instructorRequestCount = 0;
+        cout << "10 instructors are served. Taking 1 student from the queue..." << endl;
 
         cout << "Instructors queue is empty. Proceeding with students queue..." << endl;
         cout << "Processing "
@@ -109,7 +152,7 @@ void processWorkload() {
         cout << "Both instructor's and student's queue is empty.\nNo request is processed." << endl << "GOING BACK TO MAIN MENU" << endl;
     }
 }
-*/
+
 bool createServicesFromFiles(service *&f_head) {
     service *current = nullptr;
 
@@ -287,7 +330,7 @@ int main() {
                 addStudentWorkload(f_head, studentsQueue);
                 break;
             case 3:
-                // processWorkload();
+                processWorkload(instructorsQueue, studentsQueue);
                 break;
             case 4:
                 // displayUsers();
