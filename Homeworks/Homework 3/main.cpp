@@ -142,7 +142,7 @@ class Stack {
                 Service *caller;
                 reverseStack.pop(popped, caller);
                 push(popped, caller);
-                cout << caller->name << " " << popped->type << " " << popped->parameter << endl;
+                cout << caller->name << ": " << popped->type << " " << popped->parameter << ";" << endl;
             }
         }
     }
@@ -157,22 +157,41 @@ class Stack {
 };
 
 void printStack(Stack &stack, string from) {
-    cout << "Executing print stack; command from " << from << endl << "PRINTING THE STACK TRACE" << endl;
+    cout << "Executing print stack; command from " << from << endl << "PRINTING THE STACK TRACE:" << endl;
     stack.print();
 }
 
-void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
+Service *findService(Service *&serviceHead, string serviceName) {
+    // Search for the given service name
+    Service *currentService = serviceHead;
+    while (currentService && currentService->name != serviceName) {
+        currentService = currentService->next;
+    }
+
+    if (!currentService || currentService->name != serviceName) {
+        return nullptr;
+    }
+
+    return currentService;
+}
+
+void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &studentsQueue, Service *funcToCall = nullptr, User *requesterToCall = nullptr) {
     static Stack commmonStack;
     static int instructorRequestCount = 0;
 
     Service *currJob;
     User *requester;
-    if (!instructorsQueue.isEmpty() && instructorRequestCount != 10) {
+    if (funcToCall) {
+        currJob = funcToCall;
+        requester = requesterToCall;
+    }
+    else if (!instructorsQueue.isEmpty() && instructorRequestCount != 10) {
         instructorRequestCount++;
         cout << "Processing instructors queue..." << endl;
 
         instructorsQueue.dequeue(currJob, requester);
         cout << "Processing Prof. " << requester->name << "'s request (with ID " << requester->ID << ") of service (function):\n" << currJob->name << endl;
+        cout << "-------------------------------------------------------" << endl;
     }
     else if (!studentsQueue.isEmpty()) {
         instructorRequestCount = 0;
@@ -181,8 +200,7 @@ void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
 
         studentsQueue.dequeue(currJob, requester);
         cout << "Processing " << requester->name << "'s request (with ID " << requester->ID << ") of service (function):\n" << currJob->name << endl;
-
-        // cout << "-------------------------------------------------------" << endl;
+        cout << "-------------------------------------------------------" << endl;
     }
     else {
         cout << "Both instructor's and student's queue is empty.\nNo request is processed." << endl << "GOING BACK TO MAIN MENU" << endl;
@@ -200,8 +218,13 @@ void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
             printStack(commmonStack, currJob->name);
         }
         else if (commandType == "call") {
-            Service *funcToCall;
-            // processWorkload(instructorsQueue, studentsQueue, funcToCall)
+            string funcToCallName = currCommand->parameter;
+            Service *funcToCall = findService(serviceHead, funcToCallName);
+
+            cout << "Calling " << funcToCallName << " from " << currJob->name << endl;
+            if (funcToCall) {
+                processWorkload(serviceHead, instructorsQueue, studentsQueue, funcToCall, requester);
+            }
         }
 
         currCommand = currCommand->next;
@@ -211,7 +234,9 @@ void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
     cout << currJob->name << " is finished. Clearing the stack from it's data..." << endl;
     commmonStack.clearService(currJob);
 
-    cout << "GOING BACK TO MAIN MENU" << endl;
+    if (!funcToCall) {
+        cout << "GOING BACK TO MAIN MENU" << endl;
+    }
 }
 
 bool createServicesFromFiles(Service *&serviceHead) {
@@ -235,6 +260,7 @@ bool createServicesFromFiles(Service *&serviceHead) {
         // Create the list
         string functionName;
         getline(file, functionName);
+        functionName = functionName.substr(0, functionName.size() - 1);
 
         // Create the commands list
         Command *commands = nullptr;
@@ -246,6 +272,7 @@ bool createServicesFromFiles(Service *&serviceHead) {
 
             commandLineStream >> commandName;
             commandLineStream >> commandParam;
+            commandParam = commandParam.substr(0, commandParam.size() - 1);
 
             if (!commands) {
                 commands = new Command(commandName, commandParam);
@@ -291,7 +318,7 @@ void printServices(Service *serviceHead) {
 
         Command *currentCommand = currentService->commands;
         while (currentCommand) {
-            cout << currentCommand->type << " " << currentCommand->parameter << ", ";
+            cout << currentCommand->type << " " << currentCommand->parameter << ";, ";
             currentCommand = currentCommand->next;
         }
         cout << "." << endl << endl;
@@ -323,15 +350,10 @@ void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue) {
     string serviceName;
     cout << "Add a service (function) that the instructor wants to use:" << endl;
     cin >> serviceName;
-    serviceName += ":";
 
     // Search for the given service name
-    Service *currentService = serviceHead;
-    while (currentService && currentService->name != serviceName) {
-        currentService = currentService->next;
-    }
-
-    if (!currentService || currentService->name != serviceName) {
+    Service *serviceToAdd = findService(serviceHead, serviceName);
+    if (!serviceToAdd) {
         cout << "The requested service (function) does not exist." << endl << "GOING BACK TO THE MAIN MENU" << endl;
         return;
     }
@@ -345,7 +367,7 @@ void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue) {
     cin >> instructorID;
 
     User *requester = findUser(instructorName, instructorID);
-    instructorsQueue.enqueue(currentService, requester);
+    instructorsQueue.enqueue(serviceToAdd, requester);
     cout << "Prof. " << instructorName << "'s service request of " << serviceName << " has been put in the instructor's queue." << endl
          << "Waiting to be served..." << endl;
 }
@@ -354,15 +376,10 @@ void addStudentWorkload(Service *serviceHead, Queue &studentsQueue) {
     string serviceName;
     cout << "Add a service (function) that the student wants to use:" << endl;
     cin >> serviceName;
-    serviceName += ":";
 
     // Search for the given service name
-    Service *currentService = serviceHead;
-    while (currentService && currentService->name != serviceName) {
-        currentService = currentService->next;
-    }
-
-    if (!currentService || currentService->name != serviceName) {
+    Service *serviceToAdd = findService(serviceHead, serviceName);
+    if (!serviceToAdd) {
         cout << "The requested service (function) does not exist." << endl << "GOING BACK TO THE MAIN MENU" << endl;
         return;
     }
@@ -376,7 +393,7 @@ void addStudentWorkload(Service *serviceHead, Queue &studentsQueue) {
     cin >> studentID;
 
     User *requester = findUser(studentName, studentID);
-    studentsQueue.enqueue(currentService, requester);
+    studentsQueue.enqueue(serviceToAdd, requester);
     cout << studentName << "'s service request of " << serviceName << " has been put in the student's queue." << endl << "Waiting to be served..." << endl;
 }
 
@@ -413,7 +430,7 @@ int main() {
                 addStudentWorkload(serviceHead, studentsQueue);
                 break;
             case 3:
-                processWorkload(instructorsQueue, studentsQueue);
+                processWorkload(serviceHead, instructorsQueue, studentsQueue);
                 break;
             case 4:
                 // displayUsers();
