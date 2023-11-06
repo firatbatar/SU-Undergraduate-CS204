@@ -7,8 +7,8 @@
 using namespace std;
 
 struct Command {
-    string type;
-    string parameter;
+    string type;       // 'define', 'print', or 'call'
+    string parameter;  // Parameter of the command
     Command *next;
 
     Command(){};
@@ -17,7 +17,7 @@ struct Command {
 };
 
 struct Service {
-    string name;
+    string name;  // Name of the service (function_1, function_2, etc.)
     Service *next;
     Command *commands;
 
@@ -29,17 +29,19 @@ struct Service {
 struct User {
     string name;
     int ID;
-    unsigned int debt;
-    User *next;
+    unsigned int debt;  // Total cost of the user's requests
+    User *next;         // Users are kept in a linked list structure
 
     User(){};
     User(string nm, int id, User *nt = nullptr) : name(nm), ID(id), debt(0), next(nt){};
 };
 
 struct QueueNode {
-    Service *servicePtr;
-    User *requester;
-    QueueNode *next;
+    // A special node struct for instructor and student request queues
+
+    Service *servicePtr;  // Each node is a requested service (function)
+    User *requester;      // Each node has a requester (user that requests the service)
+    QueueNode *next;      // Queue is implemented in a linked list structure
 
     QueueNode(){};
     QueueNode(Service *s, User *rq, QueueNode *nt = nullptr) : servicePtr(s), requester(rq), next(nt){};
@@ -56,10 +58,12 @@ class Queue {
 
     void enqueue(Service *&newService, User *&requester) {
         if (isEmpty()) {
+            // If the queue is empty head and rear points to the only element
             head = new QueueNode(newService, requester);
             rear = head;
         }
         else {
+            // If the queue is not empty, then add the new request to the end of the queue
             rear->next = new QueueNode(newService, requester);
             rear = rear->next;
         }
@@ -67,9 +71,10 @@ class Queue {
 
     bool dequeue(Service *&popped, User *&requester) {
         if (!isEmpty()) {
+            // The head node (the first added request) is popped and assigned to reference variables
             QueueNode *temp = head;
-            popped = head->servicePtr;
-            requester = head->requester;
+            popped = head->servicePtr;    // Service that has ben requested
+            requester = head->requester;  // Requester user of that service
             head = head->next;
             delete temp;
             return true;
@@ -82,9 +87,11 @@ class Queue {
 };
 
 struct StackNode {
-    Command *commandPtr;
-    Service *callerPtr;
-    StackNode *next;
+    // A special node struct for processing services and commands
+
+    Command *commandPtr;  // Command that has been added to the stack
+    Service *callerPtr;   // The service that executes that command
+    StackNode *next;      // Stack is impleted as a linked list structure
 
     StackNode(){};
     StackNode(Command *cm, Service *cl, StackNode *nt = nullptr) : commandPtr(cm), callerPtr(cl), next(nt){};
@@ -100,6 +107,7 @@ class Stack {
     bool isEmpty() { return !head; };
 
     void push(Command *&newCommand, Service *&caller) {
+        // Add a new node to the beginning of the list
         if (isEmpty()) {
             head = new StackNode(newCommand, caller);
         }
@@ -111,9 +119,10 @@ class Stack {
 
     bool pop(Command *&popped, Service *&caller) {
         if (!isEmpty()) {
+            // The head node (the last added command) is popped and assigned to reference variables
             StackNode *temp = head;
-            popped = temp->commandPtr;
-            caller = temp->callerPtr;
+            popped = temp->commandPtr;  // The command that has been executed
+            caller = temp->callerPtr;   // The sercive that executed that command
             head = head->next;
             delete temp;
             return true;
@@ -129,6 +138,9 @@ class Stack {
             cout << "The stack is empty" << endl;
         }
         else {
+            // Stack needs to be printed in reverse and it must keep its nodes after printing
+
+            // First reverse the stack into a new stack
             Stack reverseStack;
             while (!isEmpty()) {
                 Command *popped;
@@ -137,6 +149,7 @@ class Stack {
                 reverseStack.push(popped, caller);
             }
 
+            // Then reverse the reversedStack back to the original stack while printing that reversed order
             while (!reverseStack.isEmpty()) {
                 Command *popped;
                 Service *caller;
@@ -148,18 +161,14 @@ class Stack {
     }
 
     void clearService(Service *&service) {
-        while (!isEmpty() && head->callerPtr == service) {
+        // Clear the commands of a given service from the stack
+        while (!isEmpty() && head->callerPtr == service) {  // Each node keeps it executer service pointer
             Command *dummyCommand;
             Service *dummyCaller;
             pop(dummyCommand, dummyCaller);
         }
     }
 };
-
-void printStack(Stack &stack, string from) {
-    cout << "Executing print stack; command from " << from << endl << "PRINTING THE STACK TRACE:" << endl;
-    stack.print();
-}
 
 Service *findService(Service *&serviceHead, string serviceName) {
     // Search for the given service name
@@ -168,6 +177,7 @@ Service *findService(Service *&serviceHead, string serviceName) {
         currentService = currentService->next;
     }
 
+    // If service is not found, return a null pointer
     if (!currentService || currentService->name != serviceName) {
         return nullptr;
     }
@@ -176,25 +186,28 @@ Service *findService(Service *&serviceHead, string serviceName) {
 }
 
 void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &studentsQueue, Service *funcToCall = nullptr, User *requesterToCall = nullptr) {
-    static Stack commmonStack;
+    static Stack commmonStack;  // Common stack to keep the commands executed
     static int instructorRequestCount = 0;
 
-    Service *currJob;
-    User *requester;
-    if (funcToCall) {
+    Service *currJob;  // The service that needs to be called
+    User *requester;   // The user that requested it
+
+    if (funcToCall) {  // If the service (function) is called recursivly from another service call
         currJob = funcToCall;
         requester = requesterToCall;
     }
-    else if (!instructorsQueue.isEmpty() && instructorRequestCount != 10) {
+    else if (!instructorsQueue.isEmpty() && instructorRequestCount != 10) {  // If a new request is being proccessed for a instructor (not recursively)
         instructorRequestCount++;
         cout << "Processing instructors queue..." << endl;
 
+        // Get the service to be called from the instructor queue
         instructorsQueue.dequeue(currJob, requester);
+
         cout << "Processing Prof. " << requester->name << "'s request (with ID " << requester->ID << ") of service (function):\n" << currJob->name << endl;
         cout << "-------------------------------------------------------" << endl;
     }
-    else if (!studentsQueue.isEmpty()) {
-        instructorRequestCount = 0;
+    else if (!studentsQueue.isEmpty()) {  // If a new request is being proccessed for a student (not recursively)
+        instructorRequestCount = 0;       // Reset the insturctor request count
         if (!instructorsQueue.isEmpty()) {
             cout << "Instructors queue is empty. Proceeding with students queue..." << endl;
         }
@@ -202,45 +215,56 @@ void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &stud
             cout << "10 instructors are served. Taking 1 student from the queue..." << endl;
         }
 
+        // Get the service to be called from the student queue
         studentsQueue.dequeue(currJob, requester);
+
         cout << "Processing " << requester->name << "'s request (with ID " << requester->ID << ") of service (function):\n" << currJob->name << endl;
         cout << "-------------------------------------------------------" << endl;
     }
-    else {
+    else {  // No request is waiting in the queues
         cout << "Both instructor's and student's queue is empty.\nNo request is processed." << endl << "GOING BACK TO MAIN MENU" << endl;
         return;
     }
 
+    // Process and call the requested (or recursively called) service
     Command *currCommand = currJob->commands;
     while (currCommand) {
         string commandType = currCommand->type;
 
         if (commandType == "define") {
+            // 'define' command is added to the stack
             commmonStack.push(currCommand, currJob);
             requester->debt += 1;
         }
         else if (commandType == "print") {
-            printStack(commmonStack, currJob->name);
+            // 'print' command prints the current stack
+            cout << "Executing print stack; command from " << currJob->name << endl << "PRINTING THE STACK TRACE:" << endl;
+            commmonStack.print();
             requester->debt += 2;
         }
         else if (commandType == "call") {
-            string funcToCallName = currCommand->parameter;
-            Service *funcToCall = findService(serviceHead, funcToCallName);
+            // 'call' command calls a function that it takes the name as a parameter
+
+            string funcToCallName = currCommand->parameter;                  // The name of the service
+            Service *funcToCall = findService(serviceHead, funcToCallName);  // Find the service with that name
             requester->debt += 5;
 
             cout << "Calling " << funcToCallName << " from " << currJob->name << endl;
+
+            // If that function exists in the available services, then call it recursively
             if (funcToCall) {
                 processWorkload(serviceHead, instructorsQueue, studentsQueue, funcToCall, requester);
             }
         }
 
-        currCommand = currCommand->next;
+        currCommand = currCommand->next;  // Move the to next command
     }
 
-    // Finish the service call
+    // Finish the call of the current service
     cout << currJob->name << " is finished. Clearing the stack from it's data..." << endl;
-    commmonStack.clearService(currJob);
+    commmonStack.clearService(currJob);  // Clear the stack
 
+    // If this calls is not done recursively, then it's the original call which returns to the main menu
     if (!funcToCall) {
         cout << "GOING BACK TO MAIN MENU" << endl;
     }
@@ -267,7 +291,7 @@ bool createServicesFromFiles(Service *&serviceHead) {
         // Create the list
         string functionName;
         getline(file, functionName);
-        functionName = functionName.substr(0, functionName.size() - 1);
+        functionName = functionName.substr(0, functionName.size() - 1);  // Remove the ':' from the end
 
         // Create the commands list
         Command *commands = nullptr;
@@ -279,7 +303,7 @@ bool createServicesFromFiles(Service *&serviceHead) {
 
             commandLineStream >> commandName;
             commandLineStream >> commandParam;
-            commandParam = commandParam.substr(0, commandParam.size() - 1);
+            commandParam = commandParam.substr(0, commandParam.size() - 1);  // Remove the ';' from the end
 
             if (!commands) {
                 commands = new Command(commandName, commandParam);
@@ -334,6 +358,7 @@ void printServices(Service *serviceHead) {
 }
 
 User *findUser(User *&users, string name, int id) {
+    // Find an existing user with given unique (name, id) pair
     if (users) {
         User *currUser = users;
         while (currUser) {
@@ -345,7 +370,7 @@ User *findUser(User *&users, string name, int id) {
         }
     }
 
-    // Not found
+    // If user is not found, create a new one and add it to the users list
     User *newUser = new User(name, id, users);
     users = newUser;
     return newUser;
@@ -363,16 +388,16 @@ void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue, User *
         return;
     }
 
+    // Get the requester info
     string instructorName;
     int instructorID;
-    // Found the requested service
     cout << "Give instructor's name: ";
     cin >> instructorName;
     cout << "Give insturctor's ID (an int): ";
     cin >> instructorID;
 
-    User *requester = findUser(users, instructorName, instructorID);
-    instructorsQueue.enqueue(serviceToAdd, requester);
+    User *requester = findUser(users, instructorName, instructorID);  // Find (or create) the user struct
+    instructorsQueue.enqueue(serviceToAdd, requester);                // Add the new request to the instructor queue
     cout << "Prof. " << instructorName << "'s service request of " << serviceName << " has been put in the instructor's queue." << endl
          << "Waiting to be served..." << endl;
 }
@@ -389,16 +414,16 @@ void addStudentWorkload(Service *serviceHead, Queue &studentsQueue, User *&users
         return;
     }
 
+    // Get the requester info
     string studentName;
     int studentID;
-    // Found the requested service
     cout << "Give student's name: ";
     cin >> studentName;
     cout << "Give student's ID (an int): ";
     cin >> studentID;
 
-    User *requester = findUser(users, studentName, studentID);
-    studentsQueue.enqueue(serviceToAdd, requester);
+    User *requester = findUser(users, studentName, studentID);  // Find (or create) the user struct
+    studentsQueue.enqueue(serviceToAdd, requester);             // Add the new request to the student queue
     cout << studentName << "'s service request of " << serviceName << " has been put in the student's queue." << endl << "Waiting to be served..." << endl;
 }
 
