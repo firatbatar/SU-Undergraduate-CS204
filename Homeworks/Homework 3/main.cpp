@@ -29,10 +29,11 @@ struct Service {
 struct User {
     string name;
     int ID;
+    unsigned int debt;
     User *next;
 
     User(){};
-    User(string nm, int id, User *nt = nullptr) : name(nm), ID(id), next(nt){};
+    User(string nm, int id, User *nt = nullptr) : name(nm), ID(id), debt(0), next(nt){};
 };
 
 struct QueueNode {
@@ -82,10 +83,11 @@ class Queue {
 
 struct StackNode {
     Command *commandPtr;
+    Service *callerPtr;
     StackNode *next;
 
     StackNode(){};
-    StackNode(Command *c, StackNode *nt = nullptr) : commandPtr(c), next(nt){};
+    StackNode(Command *cm, Service *cl, StackNode *nt = nullptr) : commandPtr(cm), callerPtr(cl), next(nt){};
 };
 
 class Stack {
@@ -97,20 +99,21 @@ class Stack {
 
     bool isEmpty() { return !head; };
 
-    void push(Command *newCommand) {
+    void push(Command *&newCommand, Service *&caller) {
         if (isEmpty()) {
-            head = new StackNode(newCommand);
+            head = new StackNode(newCommand, caller);
         }
         else {
-            StackNode *temp = new StackNode(newCommand, head);
+            StackNode *temp = new StackNode(newCommand, caller, head);
             head = temp;
         }
     }
 
-    bool pop(Command *&popped) {
+    bool pop(Command *&popped, Service *&caller) {
         if (!isEmpty()) {
             StackNode *temp = head;
             popped = temp->commandPtr;
+            caller = temp->callerPtr;
             head = head->next;
             delete temp;
             return true;
@@ -129,16 +132,26 @@ class Stack {
             Stack reverseStack;
             while (!isEmpty()) {
                 Command *popped;
-                pop(popped);
-                reverseStack.push(popped);
+                Service *caller;
+                pop(popped, caller);
+                reverseStack.push(popped, caller);
             }
 
             while (!reverseStack.isEmpty()) {
                 Command *popped;
-                reverseStack.pop(popped);
-                push(popped);
-                cout << popped->type << " " << popped->parameter << endl;
+                Service *caller;
+                reverseStack.pop(popped, caller);
+                push(popped, caller);
+                cout << caller->name << " " << popped->type << " " << popped->parameter << endl;
             }
+        }
+    }
+
+    void clearService(Service *&service) {
+        while (!isEmpty() && head->callerPtr == service) {
+            Command *dummyCommand;
+            Service *dummyCaller;
+            pop(dummyCommand, dummyCaller);
         }
     }
 };
@@ -181,7 +194,7 @@ void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
         string commandType = currCommand->type;
 
         if (commandType == "define") {
-            commmonStack.push(currCommand);
+            commmonStack.push(currCommand, currJob);
         }
         else if (commandType == "print") {
             printStack(commmonStack, currJob->name);
@@ -193,6 +206,10 @@ void processWorkload(Queue &instructorsQueue, Queue &studentsQueue) {
 
         currCommand = currCommand->next;
     }
+
+    // Finish the service call
+    cout << currJob->name << " is finished. Clearing the stack from it's data..." << endl;
+    commmonStack.clearService(currJob);
 
     cout << "GOING BACK TO MAIN MENU" << endl;
 }
