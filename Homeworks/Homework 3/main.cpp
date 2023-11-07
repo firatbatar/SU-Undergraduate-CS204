@@ -54,6 +54,15 @@ class Queue {
 
    public:
     Queue() : head(nullptr), rear(nullptr) {}
+    ~Queue() {
+        // In the case when the program is exited before processing all the requests queues might be not-empty
+        // Deconstructor will ensure that the memory allocated is given back when the program finishes
+        while (!isEmpty()) {
+            Service *dummyCommand;
+            User *dummyUser;
+            dequeue(dummyCommand, dummyUser);
+        }
+    }
     bool isEmpty() { return !head; }
 
     void enqueue(Service *&newService, User *&requester) {
@@ -462,6 +471,20 @@ int main() {
         switch (option) {
             case 0:
                 cout << "PROGRAM EXITING ... " << endl;
+
+                // Give back the memory allacoted for Users and Services lists
+                while (users) {
+                    User *temp = users;
+                    users = users->next;
+                    delete temp;
+                }
+
+                while (serviceHead) {
+                    Service *temp = serviceHead;
+                    serviceHead = serviceHead->next;
+                    delete temp;
+                }
+
                 exit(0);
             case 1:
                 addInstructorWorkload(serviceHead, instructorsQueue, users);
