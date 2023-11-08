@@ -82,7 +82,7 @@ class Queue {
         if (!isEmpty()) {
             // The head node (the first added request) is popped and assigned to reference variables
             QueueNode *temp = head;
-            popped = head->servicePtr;    // Service that has ben requested
+            popped = head->servicePtr;    // Service that has been requested
             requester = head->requester;  // Requester user of that service
             head = head->next;
             delete temp;
@@ -216,12 +216,12 @@ void processWorkload(Service *&serviceHead, Queue &instructorsQueue, Queue &stud
         cout << "-------------------------------------------------------" << endl;
     }
     else if (!studentsQueue.isEmpty()) {  // If a new request is being proccessed for a student (not recursively)
-        instructorRequestCount = 0;       // Reset the insturctor request count
-        if (!instructorsQueue.isEmpty()) {
+        if (instructorRequestCount != 10) {
             cout << "Instructors queue is empty. Proceeding with students queue..." << endl;
         }
         else {
             cout << "10 instructors are served. Taking 1 student from the queue..." << endl;
+            instructorRequestCount = 0;  // Reset the insturctor request count
         }
 
         // Get the service to be called from the student queue
@@ -357,11 +357,11 @@ void printServices(Service *serviceHead) {
         cout << currentService->name << ":" << endl;
 
         Command *currentCommand = currentService->commands;
-        while (currentCommand) {
+        while (currentCommand && currentCommand->next) {
             cout << currentCommand->type << " " << currentCommand->parameter << ";, ";
             currentCommand = currentCommand->next;
         }
-        cout << "." << endl << endl;
+        cout << currentCommand->type << " " << currentCommand->parameter << "." << endl << endl;
         currentService = currentService->next;
     }
 }
@@ -407,7 +407,8 @@ void addInstructorWorkload(Service *serviceHead, Queue &instructorsQueue, User *
 
     User *requester = findUser(users, instructorName, instructorID);  // Find (or create) the user struct
     instructorsQueue.enqueue(serviceToAdd, requester);                // Add the new request to the instructor queue
-    cout << "Prof. " << instructorName << "'s service request of " << serviceName << " has been put in the instructor's queue." << endl
+    cout << "Prof. " << instructorName << "'s service request of " << serviceName << endl
+         << "has been put in the instructor's queue." << endl
          << "Waiting to be served..." << endl;
 }
 
