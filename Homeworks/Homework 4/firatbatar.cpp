@@ -69,7 +69,7 @@ class LinkedListSet {
     LinkedListSet(const LinkedListSet &copy) {
         head = nullptr;  // Initial value must be nullptr for rest to work
 
-        Node *currentNodeToCopy = copy.head;  // Copied node from copy
+        Node *currentNodeToCopy = copy.head;  // Copied node from the copy
         Node *lastAddedNode;                  // Keep the tail
 
         while (currentNodeToCopy) {
@@ -111,16 +111,14 @@ class LinkedListSet {
         cout << "}" << endl;
     }
 
-    // Return itself for multiple additions
     LinkedListSet &operator+(int rhs) {
         insertOrdered(rhs);
-        return *this;
+        return *this;  // Return itself for multiple additions
     }
 
-    // Return itself for multiple removal
     LinkedListSet &operator-(int rhs) {
         remove(rhs);
-        return *this;
+        return *this;  // Return itself for multiple removal
     }
 
     const LinkedListSet &operator+=(const LinkedListSet &rhs) {
@@ -132,7 +130,7 @@ class LinkedListSet {
             currentNode = currentNode->next;
         }
 
-        return *this;
+        return *this;  // Return itself for multiple additions
     }
 
     const LinkedListSet &operator-=(const LinkedListSet &rhs) {
@@ -150,9 +148,9 @@ class LinkedListSet {
     const LinkedListSet &operator&=(const LinkedListSet &rhs) {
         // Intersection also can be expressed as A \ (A \ B)
 
-        LinkedListSet lhsCopy(*this);  // Copy lhs (say lhs') for (lhs \ rhs)
+        LinkedListSet lhsCopy(*this);  // Copy lhs (say lhs') to not change the original
         lhsCopy -= rhs;                // lhs' \ rhs
-        *this -= lhsCopy;              // lhs \ (lhs' \ rhs)
+        *this -= lhsCopy;              // lhs \ (lhs' \ rhs) = lhs & rhs
 
         return *this;
     }
