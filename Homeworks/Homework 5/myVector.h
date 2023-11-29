@@ -22,20 +22,39 @@ class myVector {
        public:
         Iterator() {}
 
-        Iterator(typename vector<KeyValuePair>::iterator it_p) : it(it_p) {}
+        Iterator(vector<KeyValuePair> *it_p) : it(it_p) {}
 
-        bool find(T2 oldKey, myVector<T1, T2> &v) {}
+        bool find(T2 oldKey, myVector<T1, T2> &v) {
+            typename vector<KeyValuePair>::iterator iter = (*it).begin();
+            for (; iter != (*it).end(); iter++) {
+                if (iter->key == oldKey) {
+                    itr = iter;
+                    return true;
+                }
+            }
 
-        void replaceKey(T2 newKey) {}
+            return false;
+        }
 
-        void printVector() {}
+        void replaceKey(T2 newKey) { itr->key = newKey; }
+
+        void printVector() {
+            typename vector<KeyValuePair>::iterator iter = (*it).begin();
+            for (; iter != (*it).end(); iter++) {
+                cout << "Value: " << iter->value << ", Key: " << iter->key << endl;
+            }
+        }
 
        private:
-        typename vector<KeyValuePair>::iterator it;
+        vector<KeyValuePair> *it;
+        typename vector<KeyValuePair>::iterator itr;
     };
 
     // Default constructor
     myVector() {}
+
+    // Copy constructor
+    myVector(const myVector &v) : name(v.name), nodes(v.nodes) {}
 
     void setName(string nm) { name = nm; }
     string getName() { return name; }
@@ -64,11 +83,29 @@ class myVector {
         return nullptr;
     }
 
-    typename vector<KeyValuePair>::iterator begin() { return nodes.begin(); }
+    myVector<T1, T2> &operator=(myVector<T1, T2> &v) {
+        name = v.name;
+        nodes = v.nodes;
+        return *this;
+    }
 
-    bool isEmpty() {}
+    vector<KeyValuePair> *begin() { return &nodes; }
 
-    bool operator==(myVector<T1, T2> &v) {}
+    bool isEmpty() { return nodes.size() == 0; }
+
+    bool operator==(myVector<T1, T2> &v) {
+        if (nodes.size() != v.nodes.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes[i].value != v.nodes[i].value || nodes[i].key != v.nodes[i].key) {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     void process_data() {}
 };
