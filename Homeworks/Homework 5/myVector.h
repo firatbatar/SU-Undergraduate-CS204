@@ -4,63 +4,71 @@ using namespace std;
 
 template <typename T1, typename T2>
 class myVector {
+   private:
+    struct KeyValuePair {
+        T1 value;
+        T2 key;
+
+        KeyValuePair(T1 v, T2 k) : value(v), key(k){};
+    };
+
+    string name;
+    vector<KeyValuePair> nodes;
+
+    friend class Iterator;
+
    public:
     class Iterator {
        public:
-        Iterator(){};
+        Iterator() {}
 
-        Iterator(typename vector<T1>::iterator it_p) : it(it_p){};
+        Iterator(typename vector<KeyValuePair>::iterator it_p) : it(it_p) {}
 
-        bool find(T2 oldKey, myVector<T1, T2> &v){};
+        bool find(T2 oldKey, myVector<T1, T2> &v) {}
 
-        void replaceKey(T2 newKey){};
+        void replaceKey(T2 newKey) {}
 
-        void printVector(){};
+        void printVector() {}
 
        private:
-        typename vector<T1>::iterator it;
+        typename vector<KeyValuePair>::iterator it;
     };
 
     // Default constructor
-    myVector(){};
+    myVector() {}
 
     void setName(string nm) { name = nm; }
     string getName() { return name; }
 
     void push_back(T1 value, T2 key) {
-        values.push_back(value);
-        keys.push_back(key);
-    };
+        KeyValuePair new_node(value, key);
+        nodes.push_back(new_node);
+    }
 
     void remove(T2 key) {
-        for (int i = 0; i < keys.size(); i++) {
-            if (keys[i] == key) {
-                keys.erase(keys.begin() + i);
-                values.erase(values.begin() + i);
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes[i].key == key) {
+                nodes.erase(nodes.begin() + i);
+                return;
             }
         }
     }
 
     T1 *operator[](T2 key) {
-        for (int i = 0; i < keys.size(); i++) {
-            if (keys[i] == key) {
-                return &values[i];
+        for (int i = 0; i < nodes.size(); i++) {
+            if (nodes[i].key == key) {
+                return &nodes[i].value;
             }
         }
 
         return nullptr;
     }
 
-    typename vector<T1>::iterator begin() { return values.begin(); }
+    typename vector<KeyValuePair>::iterator begin() { return nodes.begin(); }
 
-    bool isEmpty(){};
+    bool isEmpty() {}
 
-    bool operator==(myVector<T1, T2> &v){};
+    bool operator==(myVector<T1, T2> &v) {}
 
-    void process_data(){};
-
-   private:
-    string name;
-    vector<T1> values;
-    vector<T2> keys;
+    void process_data() {}
 };
