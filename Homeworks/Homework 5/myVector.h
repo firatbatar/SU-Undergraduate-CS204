@@ -173,6 +173,12 @@ class myVector {
                 if (wordCountsNodes[i].value > *wordCounts[mostFrequentWord]) {
                     mostFrequentWord = wordCountsNodes[i].key;
                 }
+                else if (wordCountsNodes[i].value == *wordCounts[mostFrequentWord]) {
+                    // If two words have same frequency, choose the one that comes first alphabetically
+                    if (wordCountsNodes[i].key < mostFrequentWord) {
+                        mostFrequentWord = wordCountsNodes[i].key;
+                    }
+                }
             }
 
             // Print results
