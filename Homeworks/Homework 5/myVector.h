@@ -145,6 +145,7 @@ class myVector {
             for (int i = 0; i < combined.length(); i++) {
                 char_counts[(char)combined[i]]++;  // Increment count of character
             }
+            char_counts[32] = 0;  // Space character is not counted
             // Find most frequent character
             char mostFrequentChar = 0;
             for (int i = 0; i < char_counts.size(); i++) {
